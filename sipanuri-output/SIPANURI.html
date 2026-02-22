@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIPANURI - Sistem Pemantauan Paviliun Nuri</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: #f9fafb; min-height: 100vh; }
+    .app-container { display: flex; min-height: 100vh; }
+    
+    /* Sidebar */
+    .sidebar { width: 260px; min-height: 100vh; background-color: #5D4037; color: white; flex-shrink: 0; }
+    .sidebar-header { padding: 24px; background-color: rgba(0, 0, 0, 0.15); border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: center; }
+    .sidebar-logo { height: 70px; margin: 0 auto 12px; display: block; object-fit: contain; }
+    .sidebar-title { font-size: 20px; font-weight: 800; letter-spacing: 0.05em; }
+    .sidebar-subtitle { font-size: 12px; color: rgba(255, 255, 255, 0.7); margin-top: 4px; line-height: 1.4; }
+    .sidebar-menu { list-style: none; padding: 16px 0; }
+    .menu-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 16px 24px; text-align: left; background: none; border: none; border-left: 4px solid transparent; color: rgba(255, 255, 255, 0.7); font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+    .menu-item:hover { color: white; background-color: rgba(255, 255, 255, 0.1); }
+    .menu-item.active { color: white; background-color: rgba(255, 255, 255, 0.1); border-left-color: #F1DEC9; }
+    .menu-item i { font-size: 18px; width: 20px; text-align: center; }
+    .menu-item .menu-text { flex: 1; }
+    .menu-item .chevron { font-size: 12px; transition: transform 0.2s; }
+    .menu-item .chevron.open { transform: rotate(180deg); }
+    
+    .submenu { background-color: rgba(0, 0, 0, 0.1); display: none; }
+    .submenu.open { display: block; }
+    .submenu-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 24px 12px 56px; text-align: left; background: none; border: none; color: rgba(255, 255, 255, 0.6); font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+    .submenu-item:hover { color: white; background-color: rgba(255, 255, 255, 0.05); }
+
+    /* Header & Main */
+    .main-content { flex: 1; min-width: 0; }
+    .header { position: sticky; top: 0; z-index: 50; background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #e5e7eb; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .header-title { font-size: 18px; font-weight: 700; }
+    .header-date { font-size: 14px; color: #6b7280; }
+    .btn-refresh { display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .btn-refresh:hover { background: #f9fafb; border-color: #5D4037; }
+    .btn-refresh.loading i { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Content Area */
+    .content-area { padding: 24px; }
+    
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 16px; transition: all 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08); }
+    .stat-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .stat-icon.vvip-color { background-color: #fef3c7; color: #d97706; }
+    .stat-icon.vip-color { background-color: #e0f2fe; color: #0284c7; }
+    .stat-icon.okupansi-color { background-color: #fee2e2; color: #dc2626; }
+    .stat-icon.terisi-color { background-color: #dcfce7; color: #16a34a; }
+    .stat-icon.bulan-color { background-color: #ede9fe; color: #7c3aed; }
+    .stat-label { font-size: 12px; color: #6b7280; font-weight: 500; margin-bottom: 2px; }
+    .stat-value { font-size: 26px; font-weight: 700; color: #1f2937; }
+
+    /* Kamar Grid */
+    .kamar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+    .kamar-card { background: white; border-radius: 16px; padding: 20px; border: 2px solid #e5e7eb; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .kamar-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1); }
+    .kamar-card.terisi { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #fca5a5; }
+    .kamar-card.kosong { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #86efac; }
+    .kamar-number { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .kamar-type { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; }
+    .kamar-type.vvip { background: #fef3c7; color: #92400e; }
+    .kamar-type.vip { background: #dbeafe; color: #1e40af; }
+    .kamar-status { font-size: 13px; font-weight: 600; color: #374151; }
+    .kamar-pasien { font-size: 12px; color: #6b7280; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* Floor Tabs */
+    .floor-tabs { display: flex; gap: 12px; margin-bottom: 24px; }
+    .floor-tab { padding: 10px 24px; background: white; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .floor-tab:hover { border-color: #5D4037; }
+    .floor-tab.active { background-color: #5D4037; color: white; border-color: #5D4037; }
+
+    /* Modal Styling */
+    .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 20px; width: 100%; max-width: 450px; margin: 16px; overflow: hidden; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25); }
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #5D4037, #4E342E); color: white; }
+    .modal-header h3 { font-size: 18px; font-weight: 700; }
+    .modal-close-btn { background: none; border: none; color: white; cursor: pointer; font-size: 20px; opacity: 0.8; transition: opacity 0.2s; }
+    .modal-close-btn:hover { opacity: 1; }
+    .modal-body { padding: 24px; }
+    
+    /* Detail Item */
+    .detail-item { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed #e5e7eb; }
+    .detail-item:last-of-type { border-bottom: none; margin-bottom: 0; }
+    .detail-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .detail-value { font-size: 15px; font-weight: 600; color: #1f2937; }
+    .detail-value.status-terisi { color: #dc2626; }
+    .detail-value.status-kosong { color: #16a34a; }
+
+    /* Form Styles */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .form-input { width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; font-family: inherit; transition: all 0.2s; }
+    .form-input:focus { outline: none; border-color: #5D4037; box-shadow: 0 0 0 3px rgba(93, 64, 55, 0.1); }
+    .form-select { width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; font-family: inherit; background: white; cursor: pointer; }
+    .form-select:focus { outline: none; border-color: #5D4037; }
+
+    /* Buttons */
+    .btn-group { display: flex; gap: 12px; margin-top: 20px; }
+    .btn { flex: 1; padding: 12px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-primary { background: #5D4037; color: white; }
+    .btn-primary:hover:not(:disabled) { background: #4E342E; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-success:hover:not(:disabled) { background: #15803d; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover:not(:disabled) { background: #d1d5db; }
+    .btn-edit { background: #3b82f6; color: white; }
+    .btn-edit:hover:not(:disabled) { background: #2563eb; }
+
+    /* Card */
+    .card { background: white; border-radius: 16px; border: 1px solid #e5e7eb; padding: 24px; margin-bottom: 24px; }
+    .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .card-title i { color: #5D4037; }
+
+    /* View Switching */
+    .view { display: none; }
+    .view.active { display: block; }
+    
+    /* Empty State */
+    .empty-state { background: white; border-radius: 16px; border: 1px solid #e5e7eb; padding: 64px 24px; text-align: center; }
+    .empty-state i { font-size: 64px; color: #5D4037; opacity: 0.2; margin-bottom: 20px; }
+    .empty-state h3 { font-size: 18px; font-weight: 700; color: #374151; margin-bottom: 8px; }
+    .empty-state p { color: #6b7280; font-size: 14px; }
+
+    /* Loading State */
+    .loading-spinner { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; }
+    .loading-spinner i { font-size: 32px; color: #5D4037; animation: spin 1s linear infinite; }
+    .loading-spinner p { margin-top: 12px; color: #6b7280; }
+
+    /* Top Diagnosa List */
+    .diagnosa-list { display: flex; flex-direction: column; gap: 10px; }
+    .diagnosa-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #f9fafb; border-radius: 10px; border: 1px solid #e5e7eb; }
+    .diagnosa-item .rank { width: 28px; height: 28px; border-radius: 50%; background: #5D4037; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+    .diagnosa-item .name { flex: 1; margin-left: 12px; font-weight: 600; color: #374151; }
+    .diagnosa-item .count { font-weight: 700; color: #5D4037; }
+
+    /* Toast Notification */
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; background: #1f2937; color: white; border-radius: 12px; font-size: 14px; font-weight: 500; z-index: 1000; display: none; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); }
+    .toast.show { display: flex; animation: slideIn 0.3s ease; }
+    .toast.success { background: #16a34a; }
+    .toast.error { background: #dc2626; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* History Table */
+    .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .history-table th { background: #f9fafb; padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    .history-table td { padding: 12px; border-bottom: 1px solid #e5e7eb; color: #6b7280; }
+    .history-table tr:hover td { background: #f9fafb; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-masuk { background: #dcfce7; color: #16a34a; }
+    .badge-keluar { background: #fee2e2; color: #dc2626; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; left: -260px; z-index: 200; transition: left 0.3s; }
+      .sidebar.open { left: 0; }
+      .main-content { margin-left: 0; }
+      .mobile-toggle { display: block !important; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .kamar-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .mobile-toggle { display: none; background: none; border: none; font-size: 24px; cursor: pointer; padding: 8px; }
+
+    /* Inventaris Table */
+    .inv-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .inv-table th { background: #f9fafb; padding: 14px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    .inv-table td { padding: 14px; border-bottom: 1px solid #e5e7eb; }
+    .inv-table tr:hover td { background: #f9fafb; }
+    .inv-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+    .inv-badge.baik { background: #dcfce7; color: #16a34a; }
+    .inv-badge.rusak { background: #fee2e2; color: #dc2626; }
+    .inv-badge.perlu-perbaikan { background: #fef3c7; color: #d97706; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="https://rsamp.kukarkab.go.id/template/demos/construction/images/logo-s.png" alt="Logo RSUD" class="sidebar-logo">
+        <h1 class="sidebar-title">SIPANURI</h1>
+        <p class="sidebar-subtitle">Sistem Pemantauan<br>Paviliun Nuri</p>
+      </div>
+      <ul class="sidebar-menu">
+        <li><button class="menu-item active" onclick="switchMenu('dashboard')"><i class="fas fa-chart-line"></i><span class="menu-text">Dashboard</span></button></li>
+        <li><button class="menu-item" onclick="switchMenu('kamar')"><i class="fas fa-bed-pulse"></i><span class="menu-text">Kamar Nuri</span></button></li>
+        <li><button class="menu-item" onclick="switchMenu('history')"><i class="fas fa-clock-rotate-left"></i><span class="menu-text">History</span></button></li>
+        <li>
+          <button class="menu-item" onclick="toggleInventaris()"><i class="fas fa-boxes-stacked"></i><span class="menu-text">Inventaris</span><i class="fas fa-chevron-down chevron" id="invChevron"></i></button>
+          <ul class="submenu" id="invSubmenu">
+            <li><button class="submenu-item" onclick="switchMenu('bhp-atk')"><i class="fas fa-file-signature"></i>BHP ATK</button></li>
+            <li><button class="submenu-item" onclick="switchMenu('aset-perlengkapan')"><i class="fas fa-toolbox"></i>Aset & Perlengkapan</button></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <div class="header">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+          <div>
+            <h2 class="header-title" id="headerTitle">Dashboard</h2>
+            <p class="header-date" id="headerDate"></p>
+          </div>
+        </div>
+        <button class="btn-refresh" id="btnRefresh" onclick="refreshCurrentView()"><i class="fas fa-sync-alt"></i> Perbarui</button>
+      </div>
+      
+      <!-- Content Area -->
+      <div class="content-area">
+        
+        <!-- VIEW: Dashboard -->
+        <div class="view active" id="view-dashboard">
+          <div class="stats-grid" id="dashboardStats">
+            <!-- Will be populated by JavaScript -->
+          </div>
+          
+          <div class="card">
+            <h3 class="card-title"><i class="fas fa-chart-bar"></i> Top 5 Diagnosa Bulan Ini</h3>
+            <div class="diagnosa-list" id="topDiagnosaList">
+              <!-- Will be populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- VIEW: Kamar -->
+        <div class="view" id="view-kamar">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon vvip-color"><i class="fas fa-crown"></i></div><div><p class="stat-label">VVIP</p><p class="stat-value" id="statVVIP">0/0</p></div></div>
+            <div class="stat-card"><div class="stat-icon vip-color"><i class="fas fa-bed"></i></div><div><p class="stat-label">VIP</p><p class="stat-value" id="statVIP">0/0</p></div></div>
+            <div class="stat-card"><div class="stat-icon okupansi-color"><i class="fas fa-percent"></i></div><div><p class="stat-label">Okupansi</p><p class="stat-value" id="statOkupansi">0%</p></div></div>
+            <div class="stat-card"><div class="stat-icon terisi-color"><i class="fas fa-user-injured"></i></div><div><p class="stat-label">Terisi</p><p class="stat-value" id="statTerisi">0/0</p></div></div>
+          </div>
+          
+          <div class="floor-tabs">
+            <button class="floor-tab active" id="btnF2" onclick="switchFloor(2)">Lantai 2</button>
+            <button class="floor-tab" id="btnF3" onclick="switchFloor(3)">Lantai 3</button>
+          </div>
+          
+          <div class="kamar-grid" id="kamarGrid">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+        
+        <!-- VIEW: History -->
+        <div class="view" id="view-history">
+          <div class="card">
+            <h3 class="card-title"><i class="fas fa-clock-rotate-left"></i> Riwayat Pasien</h3>
+            <div style="overflow-x: auto;">
+              <table class="history-table" id="historyTable">
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>Aksi</th>
+                    <th>Kamar</th>
+                    <th>Pasien</th>
+                    <th>Dokter</th>
+                    <th>Diagnosa</th>
+                    <th>Lama Inap</th>
+                  </tr>
+                </thead>
+                <tbody id="historyBody">
+                  <!-- Will be populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- VIEW: BHP ATK -->
+        <div class="view" id="view-bhp-atk">
+          <div class="card">
+            <h3 class="card-title"><i class="fas fa-file-signature"></i> Daftar BHP ATK</h3>
+            <div style="overflow-x: auto;">
+              <table class="inv-table" id="bhpTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nama Barang</th>
+                    <th>Kategori</th>
+                    <th>Jumlah</th>
+                    <th>Satuan</th>
+                    <th>Kondisi</th>
+                  </tr>
+                </thead>
+                <tbody id="bhpBody">
+                  <tr><td colspan="6" style="text-align: center; color: #9ca3af;">Memuat data...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- VIEW: Aset Perlengkapan -->
+        <div class="view" id="view-aset-perlengkapan">
+          <div class="card">
+            <h3 class="card-title"><i class="fas fa-toolbox"></i> Daftar Aset & Perlengkapan</h3>
+            <div style="overflow-x: auto;">
+              <table class="inv-table" id="asetTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nama Barang</th>
+                    <th>Kategori</th>
+                    <th>Jumlah</th>
+                    <th>Lokasi</th>
+                    <th>Kondisi</th>
+                  </tr>
+                </thead>
+                <tbody id="asetBody">
+                  <tr><td colspan="6" style="text-align: center; color: #9ca3af;">Memuat data...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Detail/Edit Kamar -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="mTitle">Detail Kamar</h3>
+        <button class="modal-close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- View Mode -->
+        <div id="viewMode">
+          <div class="detail-item"><div class="detail-label">Tipe Kamar</div><div class="detail-value" id="mTipe">-</div></div>
+          <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value" id="mStatusView">-</div></div>
+          <div class="detail-item"><div class="detail-label">Nama Pasien</div><div class="detail-value" id="mPasienView">-</div></div>
+          <div class="detail-item"><div class="detail-label">Dokter DPJP</div><div class="detail-value" id="mDokterView">-</div></div>
+          <div class="detail-item"><div class="detail-label">Diagnosa</div><div class="detail-value" id="mDiagnosaView">-</div></div>
+          <div class="detail-item"><div class="detail-label">Tanggal Masuk</div><div class="detail-value" id="mTglMasuk">-</div></div>
+          <div class="btn-group">
+            <button class="btn btn-edit" onclick="toggleEditMode(true)"><i class="fas fa-edit"></i> Edit Data</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Tutup</button>
+          </div>
+        </div>
+        
+        <!-- Edit Mode -->
+        <div id="editMode" style="display: none;">
+          <input type="hidden" id="editNoKamar">
+          <div class="form-group">
+            <label>Status Kamar</label>
+            <select class="form-select" id="editStatus" onchange="handleStatusChange()">
+              <option value="Kosong">Kosong</option>
+              <option value="Terisi">Terisi</option>
+            </select>
+          </div>
+          <div id="pasienFields">
+            <div class="form-group">
+              <label>Nama Pasien</label>
+              <input type="text" class="form-input" id="editPasien" placeholder="Masukkan nama pasien...">
+            </div>
+            <div class="form-group">
+              <label>Dokter DPJP</label>
+              <input type="text" class="form-input" id="editDokter" placeholder="Masukkan nama dokter..." list="dokterList">
+              <datalist id="dokterList"></datalist>
+            </div>
+            <div class="form-group">
+              <label>Diagnosa</label>
+              <input type="text" class="form-input" id="editDiagnosa" placeholder="Masukkan diagnosa...">
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-success" id="btnSave" onclick="saveData()"><i class="fas fa-save"></i> Simpan</button>
+            <button class="btn btn-secondary" onclick="toggleEditMode(false)">Batal</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Berhasil!</span>
+  </div>
+
+  <script>
+    // =====================================================
+    // GLOBAL VARIABLES
+    // =====================================================
+    let kamarData = [];
+    let currentFloor = 2;
+    let currentKamar = null;
+    let currentMenu = 'dashboard';
+    let dokterList = [];
+
+    // =====================================================
+    // INITIALIZATION
+    // =====================================================
+    window.onload = function() {
+      // Set tanggal
+      const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+      document.getElementById('headerDate').textContent = new Date().toLocaleDateString('id-ID', options);
+      
+      // Load dashboard stats
+      loadDashboardStats();
+      
+      // Load dokter list untuk datalist
+      loadDokterList();
+    };
+
+    // =====================================================
+    // MENU & NAVIGATION
+    // =====================================================
+    function toggleInventaris() {
+      document.getElementById('invSubmenu').classList.toggle('open');
+      document.getElementById('invChevron').classList.toggle('open');
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function switchMenu(menu) {
+      // Update active states
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + menu).classList.add('active');
+      
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+      const menuBtn = document.querySelector(`[onclick="switchMenu('${menu}')"]`);
+      if (menuBtn) menuBtn.classList.add('active');
+      
+      // Update title
+      const titles = {
+        'dashboard': 'Dashboard',
+        'kamar': 'Monitoring Kamar',
+        'history': 'Riwayat Pasien',
+        'bhp-atk': 'BHP ATK',
+        'aset-perlengkapan': 'Aset & Perlengkapan'
+      };
+      document.getElementById('headerTitle').textContent = titles[menu] || 'Dashboard';
+      
+      currentMenu = menu;
+      
+      // Load data based on menu
+      switch(menu) {
+        case 'dashboard':
+          loadDashboardStats();
+          break;
+        case 'kamar':
+          refreshKamarData();
+          break;
+        case 'history':
+          loadHistory();
+          break;
+        case 'bhp-atk':
+          loadBHPData();
+          break;
+        case 'aset-perlengkapan':
+          loadAsetData();
+          break;
+      }
+      
+      // Close sidebar on mobile
+      document.getElementById('sidebar').classList.remove('open');
+    }
+
+    // =====================================================
+    // DASHBOARD
+    // =====================================================
+    function loadDashboardStats() {
+      const btn = document.getElementById('btnRefresh');
+      btn.classList.add('loading');
+      
+      google.script.run
+        .withSuccessHandler(function(stats) {
+          btn.classList.remove('loading');
+          renderDashboardStats(stats);
+        })
+        .withFailureHandler(function(error) {
+          btn.classList.remove('loading');
+          showToast('Gagal memuat statistik: ' + error.message, 'error');
+        })
+        .getDashboardStats();
+    }
+
+    function renderDashboardStats(stats) {
+      const kamar = stats.kamar;
+      const bulanan = stats.bulanan;
+      
+      // Stats cards
+      document.getElementById('dashboardStats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-icon bulan-color"><i class="fas fa-calendar-check"></i></div>
+          <div>
+            <p class="stat-label">Pasien Bulan Ini</p>
+            <p class="stat-value">${bulanan.totalPasien}</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon vvip-color"><i class="fas fa-crown"></i></div>
+          <div>
+            <p class="stat-label">VVIP Terisi</p>
+            <p class="stat-value">${kamar.vvip.terisi}/${kamar.vvip.total}</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon vip-color"><i class="fas fa-bed"></i></div>
+          <div>
+            <p class="stat-label">VIP Terisi</p>
+            <p class="stat-value">${kamar.vip.terisi}/${kamar.vip.total}</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon okupansi-color"><i class="fas fa-percent"></i></div>
+          <div>
+            <p class="stat-label">Tingkat Okupansi</p>
+            <p class="stat-value">${kamar.okupansi}%</p>
+          </div>
+        </div>
+      `;
+      
+      // Top diagnosa
+      const diagnosaContainer = document.getElementById('topDiagnosaList');
+      if (bulanan.topDiagnosa.length === 0) {
+        diagnosaContainer.innerHTML = '<p style="color: #9ca3af; text-align: center; padding: 20px;">Belum ada data diagnosa bulan ini.</p>';
+      } else {
+        diagnosaContainer.innerHTML = bulanan.topDiagnosa.map((d, i) => `
+          <div class="diagnosa-item">
+            <span class="rank">${i + 1}</span>
+            <span class="name">${d.diagnosa}</span>
+            <span class="count">${d.jumlah} pasien</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // =====================================================
+    // KAMAR MANAGEMENT
+    // =====================================================
+    function refreshKamarData() {
+      const btn = document.getElementById('btnRefresh');
+      btn.classList.add('loading');
+      
+      google.script.run
+        .withSuccessHandler(function(data) {
+          btn.classList.remove('loading');
+          kamarData = data;
+          renderKamar();
+          updateStats();
+        })
+        .withFailureHandler(function(error) {
+          btn.classList.remove('loading');
+          showToast('Gagal memuat data kamar: ' + error.message, 'error');
+        })
+        .getKamarData();
+    }
+
+    function renderKamar() {
+      const grid = document.getElementById('kamarGrid');
+      
+      if (!kamarData || kamarData.length === 0) {
+        grid.innerHTML = `
+          <div class="loading-spinner" style="grid-column: 1/-1;">
+            <i class="fas fa-spinner"></i>
+            <p>Memuat data kamar...</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const filtered = kamarData.filter(k => k.No_Kamar.toString().startsWith(currentFloor.toString()));
+      
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <i class="fas fa-bed"></i>
+            <h3>Tidak Ada Kamar</h3>
+            <p>Tidak ada data kamar untuk lantai ${currentFloor}.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      grid.innerHTML = filtered.map(k => {
+        const statusClass = k.Status.toLowerCase() === 'terisi' ? 'terisi' : 'kosong';
+        const tipeClass = k.Tipe.toLowerCase();
+        
+        return `
+          <div class="kamar-card ${statusClass}" onclick='showDetail(${JSON.stringify(k)})'>
+            <div class="kamar-number">${k.No_Kamar}</div>
+            <span class="kamar-type ${tipeClass}">${k.Tipe}</span>
+            <div class="kamar-status">${k.Status}</div>
+            ${k.Pasien ? `<div class="kamar-pasien" title="${k.Pasien}"><i class="fas fa-user"></i> ${k.Pasien}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateStats() {
+      if (!kamarData || kamarData.length === 0) return;
+      
+      const total = kamarData.length;
+      const occupied = kamarData.filter(k => k.Status.toLowerCase() === 'terisi').length;
+      
+      // VVIP Stats
+      const vvipRooms = kamarData.filter(k => k.Tipe.toUpperCase() === 'VVIP');
+      const vvipOccupied = vvipRooms.filter(k => k.Status.toLowerCase() === 'terisi').length;
+      document.getElementById('statVVIP').textContent = vvipOccupied + '/' + vvipRooms.length;
+      
+      // VIP Stats
+      const vipRooms = kamarData.filter(k => k.Tipe.toUpperCase() === 'VIP');
+      const vipOccupied = vipRooms.filter(k => k.Status.toLowerCase() === 'terisi').length;
+      document.getElementById('statVIP').textContent = vipOccupied + '/' + vipRooms.length;
+      
+      // Okupansi & Terisi
+      document.getElementById('statOkupansi').textContent = total > 0 ? Math.round((occupied / total) * 100) + '%' : '0%';
+      document.getElementById('statTerisi').textContent = occupied + '/' + total;
+    }
+
+    function switchFloor(floor) {
+      currentFloor = floor;
+      document.getElementById('btnF2').classList.toggle('active', floor === 2);
+      document.getElementById('btnF3').classList.toggle('active', floor === 3);
+      renderKamar();
+    }
+
+    // =====================================================
+    // MODAL & FORM
+    // =====================================================
+    function showDetail(k) {
+      currentKamar = k;
+      
+      document.getElementById('mTitle').textContent = 'Kamar ' + k.No_Kamar;
+      document.getElementById('mTipe').textContent = k.Tipe || '-';
+      
+      const statusEl = document.getElementById('mStatusView');
+      statusEl.textContent = k.Status || '-';
+      statusEl.className = 'detail-value ' + (k.Status.toLowerCase() === 'terisi' ? 'status-terisi' : 'status-kosong');
+      
+      document.getElementById('mPasienView').textContent = k.Pasien || '-';
+      document.getElementById('mDokterView').textContent = k.Dokter || '-';
+      document.getElementById('mDiagnosaView').textContent = k.Diagnosa || '-';
+      document.getElementById('mTglMasuk').textContent = k.Tanggal_Masuk ? formatDate(k.Tanggal_Masuk) : '-';
+      
+      // Reset edit form
+      document.getElementById('editNoKamar').value = k.No_Kamar;
+      document.getElementById('editStatus').value = k.Status || 'Kosong';
+      document.getElementById('editPasien').value = k.Pasien || '';
+      document.getElementById('editDokter').value = k.Dokter || '';
+      document.getElementById('editDiagnosa').value = k.Diagnosa || '';
+      
+      handleStatusChange();
+      toggleEditMode(false);
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function toggleEditMode(isEdit) {
+      document.getElementById('viewMode').style.display = isEdit ? 'none' : 'block';
+      document.getElementById('editMode').style.display = isEdit ? 'block' : 'none';
+    }
+
+    function handleStatusChange() {
+      const status = document.getElementById('editStatus').value;
+      const pasienFields = document.getElementById('pasienFields');
+      pasienFields.style.display = status === 'Terisi' ? 'block' : 'none';
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    function closeModalOnOverlay(event) {
+      if (event.target === document.getElementById('modalOverlay')) {
+        closeModal();
+      }
+    }
+
+    function saveData() {
+      const noKamar = document.getElementById('editNoKamar').value;
+      const status = document.getElementById('editStatus').value;
+      const pasien = document.getElementById('editPasien').value;
+      const dokter = document.getElementById('editDokter').value;
+      const diagnosa = document.getElementById('editDiagnosa').value;
+      
+      // Validasi
+      if (status === 'Terisi' && !pasien.trim()) {
+        showToast('Nama pasien wajib diisi jika status Terisi', 'error');
+        return;
+      }
+      
+      const btn = document.getElementById('btnSave');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+          
+          if (result.success) {
+            showToast(result.message, 'success');
+            closeModal();
+            refreshKamarData();
+            loadDashboardStats();
+          } else {
+            showToast(result.message, 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+          showToast('Error: ' + error.message, 'error');
+        })
+        .savePatientData(noKamar, status, pasien, dokter, diagnosa);
+    }
+
+    // =====================================================
+    // HISTORY
+    // =====================================================
+    function loadHistory() {
+      const tbody = document.getElementById('historyBody');
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #9ca3af;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+      
+      google.script.run
+        .withSuccessHandler(function(data) {
+          if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #9ca3af;">Belum ada riwayat pasien.</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = data.map(h => `
+            <tr>
+              <td>${formatDateTime(h.timestamp)}</td>
+              <td><span class="badge badge-${h.aksi.toLowerCase()}">${h.aksi}</span></td>
+              <td>${h.noKamar}</td>
+              <td>${h.pasien}</td>
+              <td>${h.dokter}</td>
+              <td>${h.diagnosa}</td>
+              <td>${h.lamaInap}</td>
+            </tr>
+          `).join('');
+        })
+        .withFailureHandler(function(error) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #dc2626;">Gagal memuat data: ' + error.message + '</td></tr>';
+        })
+        .getHistoryPasien(100);
+    }
+
+    // =====================================================
+    // INVENTARIS
+    // =====================================================
+    function loadBHPData() {
+      const tbody = document.getElementById('bhpBody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+      
+      google.script.run
+        .withSuccessHandler(function(data) {
+          if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;">Belum ada data BHP ATK.</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = data.map(item => `
+            <tr>
+              <td>${item.id}</td>
+              <td><strong>${item.nama}</strong></td>
+              <td>${item.kategori}</td>
+              <td>${item.jumlah}</td>
+              <td>${item.satuan}</td>
+              <td><span class="inv-badge ${item.kondisi.toLowerCase().replace(/ /g, '-')}">${item.kondisi}</span></td>
+            </tr>
+          `).join('');
+        })
+        .withFailureHandler(function(error) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626;">Gagal memuat data</td></tr>';
+        })
+        .getBHPData();
+    }
+
+    function loadAsetData() {
+      const tbody = document.getElementById('asetBody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+      
+      google.script.run
+        .withSuccessHandler(function(data) {
+          if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;">Belum ada data Aset.</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = data.map(item => `
+            <tr>
+              <td>${item.id}</td>
+              <td><strong>${item.nama}</strong></td>
+              <td>${item.kategori}</td>
+              <td>${item.jumlah}</td>
+              <td>${item.lokasi}</td>
+              <td><span class="inv-badge ${item.kondisi.toLowerCase().replace(/ /g, '-')}">${item.kondisi}</span></td>
+            </tr>
+          `).join('');
+        })
+        .withFailureHandler(function(error) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626;">Gagal memuat data</td></tr>';
+        })
+        .getAsetData();
+    }
+
+    function loadDokterList() {
+      google.script.run
+        .withSuccessHandler(function(data) {
+          dokterList = data || [];
+          const datalist = document.getElementById('dokterList');
+          datalist.innerHTML = dokterList.map(d => `<option value="${d.nama}">`).join('');
+        })
+        .getDokterList();
+    }
+
+    // =====================================================
+    // UTILITIES
+    // =====================================================
+    function refreshCurrentView() {
+      switch(currentMenu) {
+        case 'dashboard':
+          loadDashboardStats();
+          break;
+        case 'kamar':
+          refreshKamarData();
+          break;
+        case 'history':
+          loadHistory();
+          break;
+        case 'bhp-atk':
+          loadBHPData();
+          break;
+        case 'aset-perlengkapan':
+          loadAsetData();
+          break;
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      
+      toast.className = 'toast show ' + type;
+      toastMessage.textContent = message;
+      
+      // Update icon
+      const icon = toast.querySelector('i');
+      icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    function formatDate(date) {
+      if (!date) return '-';
+      const d = new Date(date);
+      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function formatDateTime(date) {
+      if (!date) return '-';
+      const d = new Date(date);
+      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

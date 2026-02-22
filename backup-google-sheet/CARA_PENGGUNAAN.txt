@@ -1,0 +1,135 @@
+================================================================
+   SIPANURI - BACKUP DATA KE GOOGLE SHEET
+   Sistem Pemantauan Paviliun Nuri
+   RSUD Aji Muhammad Parikesit
+================================================================
+
+📁 FILE YANG DISEDIAKAN:
+------------------------
+1. code.gs    → Copy-paste ke Google Apps Script
+
+================================================================
+   CARA PENGGUNAAN (STEP BY STEP)
+================================================================
+
+LANGKAH 1: Buka Google Sheets
+-----------------------------
+- Buka https://sheets.google.com
+- Klik "+ Blank" atau buat spreadsheet baru
+
+
+LANGKAH 2: Buka Apps Script
+---------------------------
+- Di spreadsheet, klik menu: Extensions → Apps Script
+- Tab baru akan terbuka dengan editor kode
+
+
+LANGKAH 3: Copy-Paste Kode
+--------------------------
+- HAPUS SEMUA KODE yang ada di editor
+- Buka file "code.gs" di folder ini
+- Copy SELURUH isi file
+- Paste ke editor Apps Script
+
+
+LANGKAH 4: Simpan
+-----------------
+- Klik File → Save (atau tekan Ctrl+S)
+- Beri nama project: "SIPANURI Backup"
+- Klik OK
+
+
+LANGKAH 5: Jalankan Setup
+-------------------------
+- Di dropdown fungsi (pojok kanan atas), pilih: "setupSpreadsheet"
+- Klik tombol ▶ Run
+- Klik "Review Permissions"
+- Pilih akun Google Anda
+- Klik "Advanced" → "Go to SIPANURI Backup (unsafe)" → "Allow"
+
+
+LANGKAH 6: Sync Data
+--------------------
+- Pilih fungsi: "syncAllData"
+- Klik ▶ Run
+- Data akan dimuat (sample data karena API localhost)
+
+
+LANGKAH 7: Selesai!
+-------------------
+- Kembali ke spreadsheet
+- Menu "🔄 SIPANURI" akan muncul di menu bar
+
+================================================================
+   SETELAH APLIKASI DI-DEPLOY KE PRODUCTION
+================================================================
+
+1. Deploy aplikasi Next.js ke Vercel/server
+
+2. Di Apps Script, ganti baris:
+   const API_URL = 'http://localhost:3000/api/sipanuri/export'
+   
+   Menjadi:
+   const API_URL = 'https://domain-anda.com/api/sipanuri/export'
+
+3. Simpan dan jalankan "syncAllData" lagi
+
+================================================================
+   MENU YANG TERSEDIA
+================================================================
+
+Di Google Sheets akan muncul menu "🔄 SIPANURI":
+
+📊 Setup Spreadsheet  → Setup awal (jalankan sekali)
+🔄 Sync Data          → Sinkronisasi data dari API
+🧪 Test Koneksi API   → Cek koneksi ke API
+📄 Export ke PDF      → Export ke file PDF
+📁 Backup ke JSON     → Backup ke file JSON
+
+================================================================
+   SHEET YANG DIBUAT
+================================================================
+
+1. Dashboard        → Ringkasan statistik
+2. Data Kamar       → 20 kamar (VVIP & VIP)
+3. Riwayat Pasien   → History pasien masuk/keluar
+4. Data Dokter      → Daftar dokter
+5. BHP ATK          → Inventaris & stok
+6. Riwayat Stok     → History stok masuk/keluar
+7. Data Aset        → Daftar aset paviliun
+8. Peminjaman Aset  → Data peminjaman
+
+================================================================
+   BACKUP OTOMATIS (TRIGGER)
+================================================================
+
+Untuk backup otomatis setiap hari:
+
+1. Di Apps Script, jalankan fungsi "createDailyTrigger"
+2. Data akan di-sync otomatis setiap hari jam 23:00
+
+Untuk menghentikan:
+- Jalankan fungsi "removeTriggers"
+
+================================================================
+   TROUBLESHOOTING
+================================================================
+
+❌ Error: "UrlFetchApp failed"
+   → API URL tidak bisa diakses (localhost tidak bisa dari Google)
+   → Deploy aplikasi dulu ke production
+
+❌ Error: "Authorization required"
+   → Klik "Review Permissions" → Allow
+
+❌ Data tidak muncul
+   → Cek API_URL sudah benar
+   → Jalankan "testApiConnection"
+   → Cek log: View → Logs
+
+================================================================
+
+Selamat beristirahat! 🌙
+Data Anda aman dengan sistem backup ini.
+
+================================================================

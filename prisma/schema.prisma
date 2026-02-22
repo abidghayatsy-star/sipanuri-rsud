@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// SIPANURI MODELS
+// =====================================================
+
+model Kamar {
+  id            String        @id @default(cuid())
+  noKamar       String        @unique
+  tipe          String        @default("VIP")
+  status        String        @default("Kosong")
+  pasien        String?
+  dokter        String?
+  diagnosa      String?
+  tanggalMasuk  DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  histories     History[]
+}
+
+model History {
+  id          String    @id @default(cuid())
+  aksi        String    // MASUK atau KELUAR
+  noKamar     String
+  pasien      String?
+  dokter      String?
+  diagnosa    String?
+  tglMasuk    DateTime?
+  tglKeluar   DateTime?
+  lamaInap    String?
+  timestamp   DateTime  @default(now())
+  kamar       Kamar     @relation(fields: [noKamar], references: [noKamar])
+}
+
+model Dokter {
+  id        String   @id @default(cuid())
+  nama      String
+  spesialis String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BhpAtk {
+  id          String        @id @default(cuid())
+  nama        String
+  kategori    String?
+  stokAwal    Int           @default(0)
+  stokMasuk   Int           @default(0)
+  stokKeluar  Int           @default(0)
+  sisaStok    Int           @default(0)
+  satuan      String?
+  kondisi     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  stokHistory StokHistory[]
+}
+
+model StokHistory {
+  id          String   @id @default(cuid())
+  bhpId       String
+  jenis       String   // MASUK atau KELUAR
+  jumlah      Int
+  keterangan  String?
+  tanggal     DateTime @default(now())
+  petugas     String?
+  bhp         BhpAtk   @relation(fields: [bhpId], references: [id])
+}
+
+model Aset {
+  id           String        @id @default(cuid())
+  nama         String
+  kategori     String?
+  jumlah       Int           @default(0)
+  lokasi       String?
+  kondisi      String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  peminjaman   Peminjaman[]
+}
+
+model Peminjaman {
+  id            String    @id @default(cuid())
+  asetId        String
+  namaAset      String
+  jumlah        Int       @default(1)
+  peminjam      String
+  unit          String?   // Unit/ruangan peminjam
+  tujuan        String?   // Tujuan peminjaman
+  tanggalPinjam DateTime  @default(now())
+  tanggalKembali DateTime?
+  status        String    @default("Dipinjam") // Dipinjam, Dikembalikan
+  catatan       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  aset          Aset      @relation(fields: [asetId], references: [id])
+}
+
+// Keep existing models for compatibility
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
