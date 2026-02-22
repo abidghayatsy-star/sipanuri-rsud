@@ -7,8 +7,9 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient() {
-  // Untuk Turso/LibSQL
+  // Untuk Turso/LibSQL (production)
   if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+    console.log('Using Turso database:', process.env.TURSO_DATABASE_URL)
     const libsql = createClient({
       url: process.env.TURSO_DATABASE_URL,
       authToken: process.env.TURSO_AUTH_TOKEN,
@@ -18,6 +19,7 @@ function createPrismaClient() {
   }
   
   // Untuk SQLite lokal (development)
+  console.log('Using local SQLite database')
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query'] : [],
   })

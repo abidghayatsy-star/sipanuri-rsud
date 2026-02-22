@@ -1,11 +1,14 @@
 [phases.setup]
-nixPkgs = ['...', 'openssl']
+nixPkgs = ['nodejs_20', 'openssl']
 
 [phases.install]
-cmds = ['bun install']
+cmds = ['npm install']
+
+[phases.prerender]
+cmds = ['npx prisma generate']
 
 [phases.build]
-cmds = ['bun run build']
+cmds = ['npm run build']
 
 [start]
-cmd = 'node .next/standalone/server.js'
+cmd = 'npm run start'
